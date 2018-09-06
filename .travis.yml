@@ -1,0 +1,65 @@
+sudo: false
+language: generic
+notifications:
+  email: false
+git:
+  depth: 5
+cache:
+  directories:
+    - ${HOME}/.local/bin
+    - ${HOME}/.stack
+    - ${TRAVIS_BUILD_DIR}/.stack-work
+stages:
+  - Setup
+  - Check
+  - Build
+  - Test
+jobs:
+  include:
+
+    - stage: Setup
+      name: Setup
+      before_install:
+        - mkdir -p ${HOME}/.local/bin
+        - travis_retry curl -sL https://get.haskellstack.org/stable/linux-x86_64.tar.gz -o stack.tgz
+      install:
+        - tar -xz --wildcards --strip-components=1 -C ${HOME}/.local/bin/ '*/stack' -f stack.tgz
+        - rm stack.tgz
+      script:
+        - travis_wait stack --no-terminal --skip-ghc-check setup
+        - travis_wait make install-dev
+      after_script:
+        - stack --version
+        - stack exec -- ghc --version
+
+    - stage: Check
+      name: Format
+      before_script: stack exec -- hindent --version
+      script: make format-check
+      after_failure:
+        - make format-fix
+        - git diff
+
+    - stage: Check
+      name: Lint
+      before_script: stack exec -- hlint --version
+      script: make lint-check
+      after_failure: make lint-display
+
+    - stage: Build
+      name: Build
+      script: make build
+
+    - stage: Test
+      name: UnitTest
+      before_script: export STACK_FLAGS='--no-terminal --skip-ghc-check'
+      script: make test
+
+    - stage: Test
+      name: Coverage
+      before_script: export STACK_FLAGS='--no-terminal --skip-ghc-check'
+      script: make coverage || true
+
+    - stage: Test
+      name: Bench
+      script: make bench || true
