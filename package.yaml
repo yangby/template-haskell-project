@@ -1,0 +1,58 @@
+name: fibonacci
+version: 0.1.0.0
+license: AGPL-3.0-or-later
+author: YangBy <yby@yangby.org>
+maintainer: YangBy <yby@yangby.org>
+copyright: Copyright (c) 2018 YangBy <yby@yangby.org>
+
+extra-source-files:
+- README.md
+- LICENSE
+- package.yaml
+- stack.yaml
+- ChangeLog.md
+
+description: Please see the README.md.
+
+ghc-options:
+- -Wall
+- -Werror
+
+_ghc-options-base: &ghc-options-base
+- -threaded
+- -rtsopts
+- -with-rtsopts=-N
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+executables:
+  fibonacci:
+    source-dirs: app
+    main: Main.hs
+    ghc-options: *ghc-options-base
+    dependencies:
+    - fibonacci
+
+tests:
+  fibonacci-tests:
+    source-dirs: tests
+    main: Spec.hs
+    ghc-options: *ghc-options-base
+    dependencies:
+    - fibonacci
+    - hspec >= 2.5.5 && < 3
+    - QuickCheck >= 2.11 && < 3
+    - quickcheck-instances >= 0.3.17 && < 0.4
+
+benchmarks:
+  fibonacci-benchmarks:
+    source-dirs: benches
+    main: Bench.hs
+    ghc-options: *ghc-options-base
+    dependencies:
+    - fibonacci
+    - criterion >= 1.4.0 && < 2
